@@ -1,6 +1,7 @@
 import unicodedata
 import io
 import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 
 
 _ALIAS = {
@@ -94,7 +95,6 @@ def export_excel(items: list[dict], cotizacion: float, recargo: float) -> bytes:
     ws.append(headers)
 
     # Estilo de encabezado
-    from openpyxl.styles import Font, PatternFill, Alignment
     header_fill = PatternFill("solid", fgColor="1A3C6E")
     header_font = Font(color="FFFFFF", bold=True)
     for cell in ws[1]:
@@ -121,6 +121,48 @@ def export_excel(items: list[dict], cotizacion: float, recargo: float) -> bytes:
             cell.number_format = "#,##0.00"
 
     # Ancho de columnas
+    for col in ws.columns:
+        max_len = max(len(str(c.value or "")) for c in col)
+        ws.column_dimensions[col[0].column_letter].width = min(max_len + 4, 40)
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+def plantilla_excel() -> bytes:
+    """Genera una planilla de ejemplo vacía lista para completar y subir."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Lista USD"
+
+    headers = ["codigo", "descripcion", "precio", "moneda", "unidad", "observaciones"]
+    ws.append(headers)
+
+    header_fill = PatternFill("solid", fgColor="1A3C6E")
+    header_font = Font(color="FFFFFF", bold=True)
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+
+    ejemplos = [
+        ["SKU-001", "Descripción del producto 1", 10.00, "USD", "un", ""],
+        ["SKU-002", "Descripción del producto 2", 25.50, "USD", "un", "Observación opcional"],
+        ["SKU-003", "Descripción del producto 3", 8.75, "USD", "un", ""],
+    ]
+    for row in ejemplos:
+        ws.append(row)
+        ws.cell(ws.max_row, 3).number_format = "#,##0.00"
+
+    # Estilo filas de ejemplo (gris claro)
+    ejemplo_fill = PatternFill("solid", fgColor="F0F0F0")
+    ejemplo_font = Font(italic=True, color="888888")
+    for row in ws.iter_rows(min_row=2):
+        for cell in row:
+            cell.fill = ejemplo_fill
+            cell.font = ejemplo_font
+
     for col in ws.columns:
         max_len = max(len(str(c.value or "")) for c in col)
         ws.column_dimensions[col[0].column_letter].width = min(max_len + 4, 40)

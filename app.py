@@ -1,7 +1,7 @@
 import streamlit as st
 import datetime
 from db import init_db, upsert_cotizacion, get_cotizaciones_hoy, get_proveedores, upsert_proveedor, delete_proveedor, replace_items, get_items
-from io_xlsx import parse_excel, export_excel
+from io_xlsx import parse_excel, export_excel, plantilla_excel
 
 # ─── Inicialización ──────────────────────────────────────────────────────────
 init_db()
@@ -374,6 +374,15 @@ with tab_dolar:
     # ── Importar lista ────────────────────────────────────────────────────────
     with sub_import:
         st.header("Importar lista de productos (Excel USD)")
+
+        st.download_button(
+            label="⬇️ Descargar planilla de ejemplo",
+            data=plantilla_excel(),
+            file_name="plantilla_lista_USD.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            help="Descargá esta planilla, completala con tus productos y volvé a subirla.",
+        )
+        st.markdown("---")
 
         proveedores = get_proveedores()
         if not proveedores:
