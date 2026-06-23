@@ -14,23 +14,30 @@ _ALIAS = {
 }
 
 
-def _norm(text: str) -> str:
-    """Minúsculas sin acentos."""
+def norm(text: str) -> str:
+    """Minúsculas sin acentos. Usada también por oc_processor."""
     return "".join(
         c for c in unicodedata.normalize("NFD", str(text).lower())
         if unicodedata.category(c) != "Mn"
     )
 
+# Alias interno para compatibilidad
+_norm = norm
 
-def _map_headers(headers: list[str]) -> dict:
-    """Devuelve {campo_interno: índice_columna}."""
+
+def map_headers(headers: list[str], alias_dict: dict) -> dict:
+    """Devuelve {campo_interno: índice_columna} dado un dict de aliases."""
     mapping = {}
     for idx, h in enumerate(headers):
-        n = _norm(h)
-        for campo, aliases in _ALIAS.items():
+        n = norm(h)
+        for campo, aliases in alias_dict.items():
             if campo not in mapping and any(a in n for a in aliases):
                 mapping[campo] = idx
     return mapping
+
+# Alias interno para compatibilidad
+def _map_headers(headers: list[str]) -> dict:
+    return map_headers(headers, _ALIAS)
 
 
 def parse_excel(file_bytes: bytes) -> tuple[list[dict], list[str]]:
